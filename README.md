@@ -16,8 +16,22 @@ compatsentinel diff before after --html report.html
 compatsentinel mcp            # expose snapshots to an AI assistant, read-only
 ```
 
-**Status:** early development. `capture`, `doctor` and `validate` exist today; `diff`, `report` and `mcp` are next. Follow the
+**Status:** early development. `capture`, `diff`, `doctor` and `validate` exist today; the HTML report and `mcp` are next. Follow the
 [changelog](CHANGELOG.md) and the roadmap in the issues.
+
+## Try it in 30 seconds, no Windows required
+
+The repository ships two recorded snapshots that tell a Patch Tuesday story:
+a Windows 11 23H2 machine upgraded to 24H2. Notepad got slower, Calculator
+lost a DLL, a line-of-business app started crashing, and WordPad is gone.
+
+```bash
+pipx install git+https://github.com/juandresrodca/CompatSentinel   # or the dev install below
+compatsentinel diff examples/snapshots/before examples/snapshots/after
+```
+
+The demo data mixes real module lists from a Windows 11 capture with
+fabricated apps and regressions; nothing in it identifies a real machine.
 
 ## Install (development)
 

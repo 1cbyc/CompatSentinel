@@ -275,3 +275,77 @@ documented format only. Until a genuine report is captured on a host where
 WER is active, `CRASH_NEW` should be read as "best effort". This is tracked as
 an issue for the launch milestone; the fastest route is a volunteer with WER
 enabled running `compatsentinel capture` against an app known to crash.
+
+## Phase 3: diff engine and scoring
+
+### Rules are functions; the registry is a tuple
+
+Each rule is `check(before: AppRun, after: AppRun, ctx) -> list[Finding]`, a
+pure function with no I/O, clock or OS access. `RULES` is a tuple of `Rule`
+records (id, default severity, one-line summary, function). Adding a rule is
+one function plus one tuple entry, and the same table feeds documentation and
+the MCP `explain_finding` tool, so the rule list can never drift from what
+the engine actually runs.
+
+Why not a class per rule? Eight rules of five to twenty lines each do not
+need state or inheritance. A function is the smallest unit that can be unit
+tested in isolation, which is where most of the tests live.
+
+### Silence on missing data
+
+A rule returns nothing when a signal is `None` on either side. A collector
+that failed after the update must not look like every DLL vanished. The
+engine lists such gaps in `AppDiff.unavailable_signals` so the report can say
+"modules were not compared" instead of silently saying "no change".
+
+### Scoring: each rule counts once per app
+
+`score = min(100, Σ over rule ids of weight(worst severity for that rule))`
+with weights critical 100, high 50, medium 20, info 0, and verdict thresholds
+FAIL ≥ 50, WARN ≥ 20. Counting a rule once is the key decision: twenty
+missing DLLs are one problem, and a Windows update that touches a hundred
+system DLLs must not push every app to FAIL. The whole policy is three tables
+in `scoring.py`.
+
+### System DLL version changes and the environment
+
+`MODULE_VERSION_CHANGED` is info by default and medium for a system DLL. But
+after an OS update every system DLL changes version, and that is the
+expected consequence of the update, not a signal. The rule therefore stays
+info when the environment differs (`RuleContext.environment_changed`) and is
+medium only when a system DLL changed *without* an OS change, which is the
+genuinely suspicious case (a stray redistributable, a driver package, an
+in-place file replacement).
+
+### Crash evidence versus generic errors
+
+`CRASH_NEW` counts WER reports and events from `Application Error` and
+`Windows Error Reporting`. `EVENTLOG_NEW_ERRORS` excludes those providers so
+one crash does not produce two findings. Evidence is compared as normalised
+text against the before run, so a crash that already happened before the
+update is not reported as new.
+
+### `DiffResult` carries no timestamp
+
+The engine must be deterministic: same inputs, same output. Adding "generated
+at" would break equality between two runs and would leak the diffing host into
+data meant to describe two other hosts. The CLI or report may add a timestamp
+at render time.
+
+### Demo snapshots are recorded plus fabricated, and the test says which
+
+`examples/snapshots` tells one story, a 23H2 to 24H2 feature update: notepad
+slower, calculator loses a DLL, a fictional LOB app crashes in its native
+DLL, WordPad is gone because 24H2 removed it. The notepad and calculator
+module lists come from a real capture, trimmed to fourteen system and
+fourteen app modules each. `tests/test_engine.py` asserts the exact verdicts
+and rule ids so the demo can never silently stop matching the README.
+
+The recorded pair is the fixture for the diff tests as well. Keeping a second
+copy under `tests/fixtures` would only create a drift risk.
+
+### Exit codes for automation
+
+`diff --fail-on {never,warn,fail}` maps the verdict to the exit status so a
+Patch Tuesday pipeline can gate on it. The default fails only on FAIL because
+WARN-level findings are expected after an OS update.
