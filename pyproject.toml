@@ -39,6 +39,8 @@ dependencies = [
   "pydantic>=2.7",
   "rich>=13.7",
   "pyyaml>=6.0",
+  "psutil>=6.0",
+  "pywin32>=306; sys_platform == 'win32'",
 ]
 
 [project.optional-dependencies]
@@ -49,6 +51,8 @@ dev = [
   "mypy>=1.11",
   "pre-commit>=3.8",
   "types-pyyaml>=6.0",
+  "types-psutil>=6.0",
+  "types-pywin32>=306",
 ]
 
 [project.scripts]
@@ -103,6 +107,7 @@ known-first-party = ["compatsentinel"]
 
 [tool.mypy]
 python_version = "3.11"
+platform = "win32"
 strict = true
 packages = ["compatsentinel"]
 mypy_path = "src"
