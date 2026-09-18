@@ -6,11 +6,14 @@ call into the library, render the result. No business logic lives here.
 
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Annotated
+
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from compatsentinel import __version__, doctor
+from compatsentinel import __version__, doctor, suite
 
 app = typer.Typer(
     name="compatsentinel",
@@ -62,6 +65,41 @@ def doctor_command() -> None:
         console.print(
             "[yellow]Capture needs Windows 10/11. diff, report and mcp work on any OS.[/yellow]"
         )
+
+
+@app.command()
+def validate(
+    suite_path: Annotated[
+        Path, typer.Argument(help="Path to the suite file (apps.yaml).", metavar="SUITE")
+    ],
+) -> None:
+    """Validate a suite file and list the apps it would run."""
+    try:
+        loaded = suite.load_suite(suite_path)
+    except suite.SuiteError as exc:
+        # markup=False: validation messages may contain [brackets] rich would eat.
+        console.print(str(exc), style="red", markup=False)
+        raise typer.Exit(code=1) from None
+
+    table = Table(title=f"{suite_path}: {len(loaded.apps)} app(s)")
+    table.add_column("id", style="bold")
+    table.add_column("command", overflow="fold")
+    table.add_column("window regex")
+    table.add_column("timeout", justify="right")
+    table.add_column("repeats", justify="right")
+    table.add_column("tags")
+    for spec in loaded.apps:
+        settings = spec.effective(loaded.defaults)
+        table.add_row(
+            spec.id,
+            " ".join([spec.command, *spec.args]),
+            spec.window_title_regex or "-",
+            f"{settings.timeout_seconds}s",
+            str(settings.repeats),
+            ", ".join(spec.tags) or "-",
+        )
+    console.print(table)
+    console.print("[green]Suite is valid.[/green]")
 
 
 def _yes_no(value: bool) -> str:

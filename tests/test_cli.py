@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from typer.testing import CliRunner
 
 from compatsentinel import __version__
@@ -32,3 +34,18 @@ def test_doctor_runs_anywhere(runner: CliRunner) -> None:
     assert result.exit_code == 0
     assert "Python" in result.output
     assert "pywin32" in result.output
+
+
+def test_validate_example_suite(runner: CliRunner) -> None:
+    result = runner.invoke(app, ["validate", "examples/apps.yaml"])
+    assert result.exit_code == 0, result.output
+    assert "notepad" in result.output
+    assert "Suite is valid" in result.output
+
+
+def test_validate_reports_errors_and_exits_1(runner: CliRunner, tmp_path: Path) -> None:
+    bad = tmp_path / "bad.yaml"
+    bad.write_text("apps:\n  - id: notepad\n", encoding="utf-8")
+    result = runner.invoke(app, ["validate", str(bad)])
+    assert result.exit_code == 1
+    assert "apps.0.command" in result.output
