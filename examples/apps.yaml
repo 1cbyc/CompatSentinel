@@ -1,0 +1,26 @@
+# Example suite for CompatSentinel.
+#
+# defaults apply to every app; any app may override the same keys.
+# Commands run exactly as written: CompatSentinel only launches and closes them.
+defaults:
+  timeout_seconds: 30      # give up waiting for the window after this
+  alive_check_seconds: 5   # the app must still be running after this
+  repeats: 3               # startup time is the median of these runs
+  warmup_runs: 1           # untimed first launch to warm the disk cache
+
+apps:
+  - id: notepad
+    command: notepad.exe
+    window_title_regex: "Notepad"
+    tags: [inbox, builtin]
+
+  - id: calculator
+    command: calc.exe
+    window_title_regex: "Calculator"
+    tags: [inbox, store]
+
+  - id: wordpad-legacy
+    command: 'C:\Program Files\Windows NT\Accessories\wordpad.exe'
+    window_title_regex: "WordPad"
+    timeout_seconds: 45
+    tags: [inbox, removed-in-24h2]
