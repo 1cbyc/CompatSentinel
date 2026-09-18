@@ -199,3 +199,49 @@ class Finding(StrictModel):
     """None for environment-level findings."""
     before: str | None = None
     after: str | None = None
+
+
+# --- Diff configuration and result ---------------------------------------------
+
+
+class DiffConfig(StrictModel):
+    """Tunable thresholds for the diff rules. Defaults match the documented rules."""
+
+    startup_regression_pct: float = Field(default=25.0, ge=0)
+    """Median startup must be at least this much slower, in percent..."""
+    startup_regression_ms: float = Field(default=300.0, ge=0)
+    """...and at least this much slower in absolute terms. Both must hold."""
+
+
+class AppDiff(StrictModel):
+    """Outcome of comparing one app across two snapshots."""
+
+    app_id: str
+    compared: bool = True
+    """False when the app is missing from one snapshot; then there are no findings."""
+    note: str | None = None
+    score: int = Field(ge=0, le=100)
+    verdict: Verdict
+    findings: list[Finding] = []
+    unavailable_signals: list[str] = []
+    """Signals a rule could not evaluate because a collector produced no data on one side."""
+    before_outcome: LaunchOutcome | None = None
+    after_outcome: LaunchOutcome | None = None
+    before_startup_ms: float | None = None
+    after_startup_ms: float | None = None
+
+
+class DiffResult(StrictModel):
+    """Everything ``diff`` computed. Pure data: no timestamps, no host details."""
+
+    before_label: str
+    after_label: str
+    before_environment: Environment
+    after_environment: Environment
+    config: DiffConfig
+    environment_findings: list[Finding] = []
+    apps: list[AppDiff] = []
+    verdict: Verdict
+
+    def app(self, app_id: str) -> AppDiff | None:
+        return next((item for item in self.apps if item.app_id == app_id), None)
