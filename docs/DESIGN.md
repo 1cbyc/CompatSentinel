@@ -150,3 +150,117 @@ leading dots, so a label like `../etc` cannot escape the store root.
 `make_snapshot()` builds snapshots in code with overrides. Recorded JSON
 fixtures arrive with the diff engine in Phase 3, once real captures exist to
 record; until then a factory keeps tests short and typed.
+
+## Phase 2: collectors and the environment fingerprint
+
+### Verify first, then code
+
+Every Windows API used here was exercised in a throwaway script on the
+development machine before a line of collector code was written. That is how
+the following facts were established, and each one changed the design:
+
+- `notepad.exe` (System32) is a stub on Windows 11: exit code 0 within a
+  second, real app under a new PID with no parent link.
+- `EnumWindows` sees the packaged Notepad window about 480 ms after launch,
+  and `GetWindowThreadProcessId` gives the real PID.
+- `psutil.Process.memory_maps()` lists 115 DLLs for packaged Notepad without
+  elevation.
+- `GetFileVersionInfo` returns `FileVersionLS` as a *signed* 32-bit int;
+  naive shifting prints negative build numbers.
+- `EvtQuery` with an XPath filter works unelevated and returns events as XML.
+- The registry says "Windows 10 Home" on Windows 11; only the build number
+  tells them apart.
+- Windows Error Reporting is **disabled** on the development machine
+  (`Disabled = 1`), so no crash produces a `Report.wer` or an
+  `Application Error` event there. That is why `doctor` now reports WER
+  status and why the WER parser is verified against a fixture and the CI
+  runner rather than locally.
+
+### Process attribution instead of trusting the PID
+
+An app run owns three sets of processes: the spawned tree, new processes with
+the command's image name, and new processes that own a window matching
+`window_title_regex`. "New" means not present in the PID snapshot taken just
+before launch, which is what makes it safe to close them afterwards: a Notepad
+the user already had open is never touched. The window regex is therefore not
+only a readiness signal but the attribution mechanism for apps whose image
+name differs from the command (`calc.exe` starts `CalculatorApp.exe`).
+
+### Startup time is "time to first matching window"
+
+Without a regex there is no startup timing, only an alive check. Alternatives
+such as `WaitForInputIdle` were left out: they do not work across the stub
+hand-off and would make the number mean different things for different apps.
+One definition, documented, beats a clever fallback.
+
+### Collectors are a Protocol, not a base class
+
+`Collector` is a `typing.Protocol`: a class is a collector if it has `name`,
+`requires_elevation` and `collect(ctx)`. There is nothing to inherit and no
+registration step. `run_collector` is the only place that calls `collect`,
+and it converts `CollectorSkipped` into `skipped` and any other exception
+into `error`, so a collector cannot abort a capture.
+
+The runner assigns each collector's result to a typed field of `AppRun`
+explicitly rather than through a generic registry. Three collectors do not
+justify indirection, and explicit assignment keeps mypy strict useful.
+
+### Live versus post-run collectors
+
+Modules must be read while the app is up, so the runner collects them on the
+last launch before closing it. Event log and WER look at a time window, so
+they run once after all launches. `RunContext` carries both the window and
+the attributed PIDs and image names, which is all a collector may know.
+
+### Event attribution is textual, on purpose
+
+Application Error, .NET Runtime, SideBySide and WER events are logged by
+*other* processes; the `Execution ProcessID` in the event is not the app's.
+The app name appears in the event data instead, so events are matched by
+image name in the raw data. Raw data is stored rather than the localized
+message: it is language independent and does not require provider metadata.
+
+### Platform guards as if/else
+
+mypy runs with `platform = "win32"` on every OS so both CI jobs check the same
+code paths, and `warn_unreachable` stays on. Code after an early
+`if sys.platform != "win32": return` would be flagged unreachable, so platform
+branches are always written as `if/else`. Windows-only imports (`win32gui`,
+`winreg`) live inside those branches so every module imports on Linux.
+
+### Environment sources
+
+| Signal | Source | Needs elevation |
+|---|---|---|
+| build, UBR, DisplayVersion, EditionID | `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion` | no |
+| installed KBs | `Get-HotFix` (Win32_QuickFixEngineering) | no |
+| .NET Framework | `NDP\v4\Full\Version` | no |
+| .NET runtimes | `dotnet --list-runtimes` when on PATH | no |
+| VC++ redistributables | Uninstall keys with "Visual C++" and "Redistributable" in the name | no |
+
+`Get-HotFix` costs about three seconds, which is acceptable once per capture.
+`wmic qfe` was rejected because WMIC is removed from recent Windows 11 builds.
+
+### What the Windows CI job proves
+
+`windows-latest` launches and closes notepad through `launch()`, then runs a
+full `runner.capture` (two timed launches after a warmup) and asserts a
+matching window, startup samples, System32 DLLs and a clean event log. A
+final informational step crashes a throwaway interpreter to make the runner
+write a real `Report.wer`, so the parser can be checked against genuine
+output without enabling WER on a developer machine.
+
+### Settle pause between launches
+
+A first full run of the example suite reported notepad as `exited` although
+every window was detected: on one of four back-to-back launches the packaged
+Notepad process ended by itself within the alive check. Tracing five launches
+with a half-second pause between close and relaunch showed no such exit. The
+runner therefore waits `SETTLE_SECONDS` (1 s) between launches of the same
+app. This is deliberately a constant, not a suite option: it is a tool
+correctness margin, not a property of the app under test. If it turns out to
+be app dependent it can move to `RunDefaults` later.
+
+The exit code recorded for a stub-launched app is the stub's (0), not the real
+process's. Reading the real exit code needs a handle opened before the process
+ends; that is tracked as a follow-up issue rather than built now.

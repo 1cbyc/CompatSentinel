@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `compatsentinel capture`: launches each app in the suite with process attribution, window detection and startup timing, then records loaded modules, Application log errors and WER reports.
+- Environment fingerprint: build, UBR, display version, edition, hotfixes, .NET and VC++ runtimes.
+- `doctor` reports whether Windows Error Reporting is enabled.
 - Data model (`models.py`): `Snapshot`, `Environment`, `AppRun`, collector signals, `Finding`, with a schema version.
 - Suite loader with readable validation errors and `compatsentinel validate`.
 - Versioned JSON snapshot store under `snapshots/<label>/snapshot.json` with atomic writes.
