@@ -1,0 +1,769 @@
+{
+  "schema_version": 1,
+  "label": "before",
+  "created_at": "2025-06-03T09:12:00Z",
+  "tool_version": "0.1.0",
+  "environment": {
+    "os_name": "Windows 11",
+    "os_version": "10.0.22631",
+    "architecture": "AMD64",
+    "python_version": "3.11.9",
+    "build": 22631,
+    "ubr": 4317,
+    "display_version": "23H2",
+    "edition": "Professional",
+    "hotfixes": [
+      "KB5027397",
+      "KB5043130",
+      "KB5044285",
+      "KB5044620"
+    ],
+    "dotnet_runtimes": [
+      ".NET Framework 4.8.09032",
+      "Microsoft.NETCore.App 8.0.10",
+      "Microsoft.WindowsDesktop.App 8.0.10"
+    ],
+    "vcpp_runtimes": [
+      "Microsoft Visual C++ 2010 x64 Redistributable - 10.0.40219",
+      "Microsoft Visual C++ 2010 x86 Redistributable - 10.0.40219",
+      "Microsoft Visual C++ 2012 Redistributable (x64) - 11.0.61030",
+      "Microsoft Visual C++ 2012 Redistributable (x86) - 11.0.61030"
+    ]
+  },
+  "defaults": {
+    "timeout_seconds": 30,
+    "alive_check_seconds": 5,
+    "repeats": 3,
+    "warmup_runs": 1
+  },
+  "apps": [
+    {
+      "app_id": "notepad",
+      "command": "notepad.exe",
+      "args": [],
+      "tags": [
+        "inbox",
+        "builtin"
+      ],
+      "started_at": "2025-06-03T09:12:04Z",
+      "finished_at": "2025-06-03T09:12:52Z",
+      "launch": {
+        "outcome": "ok",
+        "exit_code": 0,
+        "startup_ms": 331.9,
+        "startup_samples_ms": [
+          318.4,
+          331.9,
+          344.0
+        ],
+        "alive_after_check": true,
+        "pids": [
+          4120,
+          4188,
+          4231
+        ],
+        "window_title": "Notepad",
+        "error": null
+      },
+      "modules": [
+        {
+          "name": "msvcp140.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.VCLibs.140.00.UWPDesktop_14.0.33728.0_x64__8wekyb3d8bbwe\\msvcp140.dll",
+          "version": "14.0.33728.0",
+          "is_system": false
+        },
+        {
+          "name": "msvcp140_atomic_wait.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.VCLibs.140.00.UWPDesktop_14.0.33728.0_x64__8wekyb3d8bbwe\\msvcp140_atomic_wait.dll",
+          "version": "14.0.33728.0",
+          "is_system": false
+        },
+        {
+          "name": "vcruntime140.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.VCLibs.140.00.UWPDesktop_14.0.33728.0_x64__8wekyb3d8bbwe\\vcruntime140.dll",
+          "version": "14.0.33728.0",
+          "is_system": false
+        },
+        {
+          "name": "vcruntime140_1.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.VCLibs.140.00.UWPDesktop_14.0.33728.0_x64__8wekyb3d8bbwe\\vcruntime140_1.dll",
+          "version": "14.0.33728.0",
+          "is_system": false
+        },
+        {
+          "name": "CoreMessagingXP.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.2_2.5.1.0_x64__8wekyb3d8bbwe\\CoreMessagingXP.dll",
+          "version": "2.5.1.0",
+          "is_system": false
+        },
+        {
+          "name": "dcompi.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.2_2.5.1.0_x64__8wekyb3d8bbwe\\dcompi.dll",
+          "version": "2.5.1.0",
+          "is_system": false
+        },
+        {
+          "name": "dwmcorei.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.2_2.5.1.0_x64__8wekyb3d8bbwe\\dwmcorei.dll",
+          "version": "2.5.1.0",
+          "is_system": false
+        },
+        {
+          "name": "marshal.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.2_2.5.1.0_x64__8wekyb3d8bbwe\\marshal.dll",
+          "version": "2.5.1.0",
+          "is_system": false
+        },
+        {
+          "name": "Microsoft.DirectManipulation.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.2_2.5.1.0_x64__8wekyb3d8bbwe\\Microsoft.DirectManipulation.dll",
+          "version": "2.5.1.0",
+          "is_system": false
+        },
+        {
+          "name": "Microsoft.InputStateManager.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.2_2.5.1.0_x64__8wekyb3d8bbwe\\Microsoft.InputStateManager.dll",
+          "version": "2.5.1.0",
+          "is_system": false
+        },
+        {
+          "name": "Microsoft.Internal.FrameworkUdk.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.2_2.5.1.0_x64__8wekyb3d8bbwe\\Microsoft.Internal.FrameworkUdk.dll",
+          "version": "2.5.1.0",
+          "is_system": false
+        },
+        {
+          "name": "Microsoft.UI.Composition.OSSupport.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.2_2.5.1.0_x64__8wekyb3d8bbwe\\Microsoft.UI.Composition.OSSupport.dll",
+          "version": "2.5.1.0",
+          "is_system": false
+        },
+        {
+          "name": "Microsoft.UI.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.2_2.5.1.0_x64__8wekyb3d8bbwe\\Microsoft.UI.dll",
+          "version": "2.5.1.0",
+          "is_system": false
+        },
+        {
+          "name": "Microsoft.UI.Input.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.2_2.5.1.0_x64__8wekyb3d8bbwe\\Microsoft.UI.Input.dll",
+          "version": "2.5.1.0",
+          "is_system": false
+        },
+        {
+          "name": "advapi32.dll",
+          "path": "C:\\Windows\\System32\\advapi32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "BCP47Langs.dll",
+          "path": "C:\\Windows\\System32\\BCP47Langs.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "BCP47mrm.dll",
+          "path": "C:\\Windows\\System32\\BCP47mrm.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "bcrypt.dll",
+          "path": "C:\\Windows\\System32\\bcrypt.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "bcryptprimitives.dll",
+          "path": "C:\\Windows\\System32\\bcryptprimitives.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "cfgmgr32.dll",
+          "path": "C:\\Windows\\System32\\cfgmgr32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "clbcatq.dll",
+          "path": "C:\\Windows\\System32\\clbcatq.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "combase.dll",
+          "path": "C:\\Windows\\System32\\combase.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "comdlg32.dll",
+          "path": "C:\\Windows\\System32\\comdlg32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "CoreMessaging.dll",
+          "path": "C:\\Windows\\System32\\CoreMessaging.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "CoreUIComponents.dll",
+          "path": "C:\\Windows\\System32\\CoreUIComponents.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "crypt32.dll",
+          "path": "C:\\Windows\\System32\\crypt32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "cryptbase.dll",
+          "path": "C:\\Windows\\System32\\cryptbase.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "cryptnet.dll",
+          "path": "C:\\Windows\\System32\\cryptnet.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        }
+      ],
+      "events": [],
+      "wer": [],
+      "collectors": [
+        {
+          "name": "modules",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        },
+        {
+          "name": "eventlog",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        },
+        {
+          "name": "wer",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        }
+      ]
+    },
+    {
+      "app_id": "calculator",
+      "command": "calc.exe",
+      "args": [],
+      "tags": [
+        "inbox",
+        "store"
+      ],
+      "started_at": "2025-06-03T09:13:00Z",
+      "finished_at": "2025-06-03T09:13:48Z",
+      "launch": {
+        "outcome": "ok",
+        "exit_code": 0,
+        "startup_ms": 466.3,
+        "startup_samples_ms": [
+          455.1,
+          466.3,
+          480.9
+        ],
+        "alive_after_check": true,
+        "pids": [
+          4120,
+          4188,
+          4231
+        ],
+        "window_title": "Calculator",
+        "error": null
+      },
+      "modules": [
+        {
+          "name": "SharedLibrary.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.NET.Native.Framework.2.2_2.2.29512.0_x64__8wekyb3d8bbwe\\SharedLibrary.dll",
+          "version": "2.2.29512.0",
+          "is_system": false
+        },
+        {
+          "name": "mrt100_app.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.NET.Native.Runtime.2.2_2.2.28604.0_x64__8wekyb3d8bbwe\\mrt100_app.dll",
+          "version": "2.2.28604.0",
+          "is_system": false
+        },
+        {
+          "name": "Microsoft.UI.Xaml.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.UI.Xaml.2.8_8.2511.26001.0_x64__8wekyb3d8bbwe\\Microsoft.UI.Xaml.dll",
+          "version": "8.2511.26001.0",
+          "is_system": false
+        },
+        {
+          "name": "concrt140_app.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.VCLibs.140.00_14.0.33519.0_x64__8wekyb3d8bbwe\\concrt140_app.dll",
+          "version": "14.0.33519.0",
+          "is_system": false
+        },
+        {
+          "name": "msvcp140_app.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.VCLibs.140.00_14.0.33519.0_x64__8wekyb3d8bbwe\\msvcp140_app.dll",
+          "version": "14.0.33519.0",
+          "is_system": false
+        },
+        {
+          "name": "vccorlib140_app.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.VCLibs.140.00_14.0.33519.0_x64__8wekyb3d8bbwe\\vccorlib140_app.dll",
+          "version": "14.0.33519.0",
+          "is_system": false
+        },
+        {
+          "name": "vcruntime140_1_app.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.VCLibs.140.00_14.0.33519.0_x64__8wekyb3d8bbwe\\vcruntime140_1_app.dll",
+          "version": "14.0.33519.0",
+          "is_system": false
+        },
+        {
+          "name": "vcruntime140_app.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.VCLibs.140.00_14.0.33519.0_x64__8wekyb3d8bbwe\\vcruntime140_app.dll",
+          "version": "14.0.33519.0",
+          "is_system": false
+        },
+        {
+          "name": "CalculatorApp.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsCalculator_11.2607.0.0_x64__8wekyb3d8bbwe\\CalculatorApp.dll",
+          "version": "11.2607.0.0",
+          "is_system": false
+        },
+        {
+          "name": "CalculatorApp.exe",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsCalculator_11.2607.0.0_x64__8wekyb3d8bbwe\\CalculatorApp.exe",
+          "version": "11.2607.0.0",
+          "is_system": false
+        },
+        {
+          "name": "CalcViewModel.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsCalculator_11.2607.0.0_x64__8wekyb3d8bbwe\\CalcViewModel.dll",
+          "version": "11.2607.0.0",
+          "is_system": false
+        },
+        {
+          "name": "clrcompression.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsCalculator_11.2607.0.0_x64__8wekyb3d8bbwe\\clrcompression.dll",
+          "version": "11.2607.0.0",
+          "is_system": false
+        },
+        {
+          "name": "GraphControl.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsCalculator_11.2607.0.0_x64__8wekyb3d8bbwe\\GraphControl.dll",
+          "version": "11.2607.0.0",
+          "is_system": false
+        },
+        {
+          "name": "TraceLogging.dll",
+          "path": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsCalculator_11.2607.0.0_x64__8wekyb3d8bbwe\\TraceLogging.dll",
+          "version": "11.2607.0.0",
+          "is_system": false
+        },
+        {
+          "name": "advapi32.dll",
+          "path": "C:\\Windows\\System32\\advapi32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "BCP47Langs.dll",
+          "path": "C:\\Windows\\System32\\BCP47Langs.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "BCP47mrm.dll",
+          "path": "C:\\Windows\\System32\\BCP47mrm.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "bcrypt.dll",
+          "path": "C:\\Windows\\System32\\bcrypt.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "bcryptprimitives.dll",
+          "path": "C:\\Windows\\System32\\bcryptprimitives.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "cfgmgr32.dll",
+          "path": "C:\\Windows\\System32\\cfgmgr32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "combase.dll",
+          "path": "C:\\Windows\\System32\\combase.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "CoreMessaging.dll",
+          "path": "C:\\Windows\\System32\\CoreMessaging.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "CoreUIComponents.dll",
+          "path": "C:\\Windows\\System32\\CoreUIComponents.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "crypt32.dll",
+          "path": "C:\\Windows\\System32\\crypt32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "cryptbase.dll",
+          "path": "C:\\Windows\\System32\\cryptbase.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "cryptnet.dll",
+          "path": "C:\\Windows\\System32\\cryptnet.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "cryptsp.dll",
+          "path": "C:\\Windows\\System32\\cryptsp.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "d2d1.dll",
+          "path": "C:\\Windows\\System32\\d2d1.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        }
+      ],
+      "events": [],
+      "wer": [],
+      "collectors": [
+        {
+          "name": "modules",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        },
+        {
+          "name": "eventlog",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        },
+        {
+          "name": "wer",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        }
+      ]
+    },
+    {
+      "app_id": "contoso-ledger",
+      "command": "C:\\Program Files\\Contoso\\Ledger\\Ledger.exe",
+      "args": [],
+      "tags": [
+        "lob",
+        "dotnet"
+      ],
+      "started_at": "2025-06-03T09:14:00Z",
+      "finished_at": "2025-06-03T09:14:48Z",
+      "launch": {
+        "outcome": "ok",
+        "exit_code": 0,
+        "startup_ms": 1840.2,
+        "startup_samples_ms": [
+          1802.7,
+          1840.2,
+          1911.5
+        ],
+        "alive_after_check": true,
+        "pids": [
+          4120,
+          4188,
+          4231
+        ],
+        "window_title": "Contoso Ledger 1.4",
+        "error": null
+      },
+      "modules": [
+        {
+          "name": "Contoso.Ledger.Native.dll",
+          "path": "C:\\Program Files\\Contoso\\Ledger\\Contoso.Ledger.Native.dll",
+          "version": "1.4.2.0",
+          "is_system": false
+        },
+        {
+          "name": "Ledger.Core.dll",
+          "path": "C:\\Program Files\\Contoso\\Ledger\\Ledger.Core.dll",
+          "version": "1.4.2.0",
+          "is_system": false
+        },
+        {
+          "name": "Ledger.exe",
+          "path": "C:\\Program Files\\Contoso\\Ledger\\Ledger.exe",
+          "version": "1.4.2.0",
+          "is_system": false
+        },
+        {
+          "name": "hostfxr.dll",
+          "path": "C:\\Program Files\\dotnet\\host\\fxr\\8.0.10\\hostfxr.dll",
+          "version": "8.0.1024.46610",
+          "is_system": false
+        },
+        {
+          "name": "clrjit.dll",
+          "path": "C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.10\\clrjit.dll",
+          "version": "8.0.1024.46610",
+          "is_system": false
+        },
+        {
+          "name": "coreclr.dll",
+          "path": "C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.10\\coreclr.dll",
+          "version": "8.0.1024.46610",
+          "is_system": false
+        },
+        {
+          "name": "System.Private.CoreLib.dll",
+          "path": "C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.10\\System.Private.CoreLib.dll",
+          "version": "8.0.1024.46610",
+          "is_system": false
+        },
+        {
+          "name": "ADVAPI32.dll",
+          "path": "C:\\Windows\\System32\\ADVAPI32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "combase.dll",
+          "path": "C:\\Windows\\System32\\combase.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "GDI32.dll",
+          "path": "C:\\Windows\\System32\\GDI32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "KERNEL32.DLL",
+          "path": "C:\\Windows\\System32\\KERNEL32.DLL",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "KERNELBASE.dll",
+          "path": "C:\\Windows\\System32\\KERNELBASE.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "msvcp_win.dll",
+          "path": "C:\\Windows\\System32\\msvcp_win.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "ntdll.dll",
+          "path": "C:\\Windows\\System32\\ntdll.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "ole32.dll",
+          "path": "C:\\Windows\\System32\\ole32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "RPCRT4.dll",
+          "path": "C:\\Windows\\System32\\RPCRT4.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "ucrtbase.dll",
+          "path": "C:\\Windows\\System32\\ucrtbase.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "USER32.dll",
+          "path": "C:\\Windows\\System32\\USER32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        }
+      ],
+      "events": [],
+      "wer": [],
+      "collectors": [
+        {
+          "name": "modules",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        },
+        {
+          "name": "eventlog",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        },
+        {
+          "name": "wer",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        }
+      ]
+    },
+    {
+      "app_id": "wordpad-legacy",
+      "command": "C:\\Program Files\\Windows NT\\Accessories\\wordpad.exe",
+      "args": [],
+      "tags": [
+        "inbox",
+        "removed-in-24h2"
+      ],
+      "started_at": "2025-06-03T09:15:20Z",
+      "finished_at": "2025-06-03T09:16:08Z",
+      "launch": {
+        "outcome": "ok",
+        "exit_code": 0,
+        "startup_ms": 612.4,
+        "startup_samples_ms": [
+          598.0,
+          612.4,
+          640.1
+        ],
+        "alive_after_check": true,
+        "pids": [
+          4120,
+          4188,
+          4231
+        ],
+        "window_title": "Document - WordPad",
+        "error": null
+      },
+      "modules": [
+        {
+          "name": "wordpad.exe",
+          "path": "C:\\Program Files\\Windows NT\\Accessories\\wordpad.exe",
+          "version": "10.0.22631.4317",
+          "is_system": false
+        },
+        {
+          "name": "comctl32.dll",
+          "path": "C:\\Windows\\System32\\comctl32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "GDI32.dll",
+          "path": "C:\\Windows\\System32\\GDI32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "KERNEL32.DLL",
+          "path": "C:\\Windows\\System32\\KERNEL32.DLL",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "KERNELBASE.dll",
+          "path": "C:\\Windows\\System32\\KERNELBASE.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "msftedit.dll",
+          "path": "C:\\Windows\\System32\\msftedit.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "ntdll.dll",
+          "path": "C:\\Windows\\System32\\ntdll.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "riched20.dll",
+          "path": "C:\\Windows\\System32\\riched20.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "SHELL32.dll",
+          "path": "C:\\Windows\\System32\\SHELL32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        },
+        {
+          "name": "USER32.dll",
+          "path": "C:\\Windows\\System32\\USER32.dll",
+          "version": "10.0.22631.4317",
+          "is_system": true
+        }
+      ],
+      "events": [],
+      "wer": [],
+      "collectors": [
+        {
+          "name": "modules",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        },
+        {
+          "name": "eventlog",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        },
+        {
+          "name": "wer",
+          "status": "ok",
+          "duration_ms": 12.5,
+          "error": null,
+          "requires_elevation": false
+        }
+      ]
+    }
+  ]
+}
