@@ -264,3 +264,14 @@ be app dependent it can move to `RunDefaults` later.
 The exit code recorded for a stub-launched app is the stub's (0), not the real
 process's. Reading the real exit code needs a handle opened before the process
 ends; that is tracked as a follow-up issue rather than built now.
+
+### Open verification item: crash reports on real crashes
+
+On 2026-09-18 the `windows-latest` runner (WER enabled, `ForceQueue=1`,
+`DontShowUI=1`) produced neither a `Report.wer` nor an `Application Error`
+event within 30 s of a throwaway interpreter calling `os.abort()` and jumping
+to a null function pointer. The parser therefore remains verified against the
+documented format only. Until a genuine report is captured on a host where
+WER is active, `CRASH_NEW` should be read as "best effort". This is tracked as
+an issue for the launch milestone; the fastest route is a volunteer with WER
+enabled running `compatsentinel capture` against an app known to crash.
