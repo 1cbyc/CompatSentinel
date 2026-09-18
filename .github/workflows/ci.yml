@@ -66,5 +66,37 @@ jobs:
       - name: Doctor
         run: compatsentinel doctor
 
-      - name: Launch and close notepad
+      - name: Windows-only tests (launch, capture)
         run: pytest -m windows_only -v
+
+      - name: Capture notepad through the CLI
+        run: |
+          compatsentinel capture --suite examples/apps.yaml --label ci --only notepad --store "$env:RUNNER_TEMP\snapshots"
+          Get-Content "$env:RUNNER_TEMP\snapshots\ci\snapshot.json" -TotalCount 40
+
+      - name: WER diagnostics (informational)
+        continue-on-error: true
+        shell: python
+        run: |
+          # Crash a throwaway interpreter so WER writes a report, then print what
+          # the runner produced. Used to verify the Report.wer parser against a
+          # real file; the development machine has WER disabled.
+          import codecs, glob, os, subprocess, sys, time
+          from compatsentinel import doctor
+          print("WER enabled:", doctor.wer_enabled())
+          subprocess.run([sys.executable, "-c", "import os; os.abort()"], timeout=120)
+          time.sleep(15)
+          roots = [os.environ.get("ProgramData", ""), os.environ.get("LOCALAPPDATA", "")]
+          pattern = os.path.join("Microsoft", "Windows", "WER", "Report*", "*", "Report.wer")
+          files = [f for r in roots for f in glob.glob(os.path.join(r, pattern))]
+          print("Report.wer files:", files)
+          keys = ("Version", "EventType", "EventTime", "ReportType", "AppName", "AppPath",
+                  "Sig[", "FriendlyEventName", "TargetAppVer", "NsAppName")
+          for f in files[:2]:
+              raw = open(f, "rb").read()
+              utf16 = raw.startswith(codecs.BOM_UTF16_LE) or raw.startswith(codecs.BOM_UTF16_BE)
+              text = raw.decode("utf-16") if utf16 else raw.decode("utf-8", "replace")
+              print("=====", f)
+              for line in text.splitlines():
+                  if line.startswith(keys):
+                      print(line)
