@@ -16,8 +16,18 @@ import psutil
 from compatsentinel.collectors.base import CollectorSkipped, RunContext
 from compatsentinel.models import ModuleInfo
 
-MODULE_SUFFIXES = (".dll", ".exe", ".so", ".dylib")
-"""Windows modules plus Unix shared objects so the collector is testable anywhere."""
+MODULE_SUFFIXES = (".dll", ".exe", ".dylib")
+"""Windows modules plus macOS libraries; Linux ``.so`` files are matched separately."""
+
+
+def looks_like_module(path: str) -> bool:
+    """True for DLLs, executables and Unix shared objects (``libc.so.6`` included).
+
+    Unix libraries carry the version after ``.so``, so a plain suffix check is
+    not enough; the collector must work on Linux so tests can run there.
+    """
+    name = PureWindowsPath(path).name.lower()
+    return name.endswith(MODULE_SUFFIXES) or name.endswith(".so") or ".so." in name
 
 
 class ModulesCollector:
@@ -37,7 +47,7 @@ class ModulesCollector:
                 denied.append(pid)
                 continue
             inspected += 1
-            paths.update(m.path for m in maps if m.path.lower().endswith(MODULE_SUFFIXES))
+            paths.update(m.path for m in maps if looks_like_module(m.path))
 
         if inspected == 0:
             if denied:

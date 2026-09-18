@@ -81,7 +81,8 @@ def test_mentions_app_matches_name_or_path_tail() -> None:
 
 
 def test_report_folders_come_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("ProgramData", r"C:\ProgramData")
+    # Uppercase on purpose: Windows ignores case, Linux (where CI runs) does not.
+    monkeypatch.setenv("PROGRAMDATA", r"C:\ProgramData")
     monkeypatch.setenv("LOCALAPPDATA", r"C:\Users\me\AppData\Local")
     folders = [str(p) for p in wer.report_folders()]
     assert len(folders) == 4

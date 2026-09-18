@@ -81,15 +81,28 @@ jobs:
           # Crash a throwaway interpreter so WER writes a report, then print what
           # the runner produced. Used to verify the Report.wer parser against a
           # real file; the development machine has WER disabled.
-          import codecs, glob, os, subprocess, sys, time
+          import codecs, glob, os, subprocess, sys, time, winreg
+          from datetime import UTC, datetime, timedelta
           from compatsentinel import doctor
+          from compatsentinel.collectors import eventlog
           print("WER enabled:", doctor.wer_enabled())
+          with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, doctor.WER_KEY) as key:
+              for i in range(winreg.QueryInfoKey(key)[1]):
+                  print("  WER setting:", winreg.EnumValue(key, i)[:2])
+          started = datetime.now(UTC)
           subprocess.run([sys.executable, "-c", "import os; os.abort()"], timeout=120)
-          time.sleep(15)
+          subprocess.run([sys.executable, "-c", "import ctypes; ctypes.CFUNCTYPE(None)(0)()"], timeout=120)
+          time.sleep(30)
           roots = [os.environ.get("ProgramData", ""), os.environ.get("LOCALAPPDATA", "")]
-          pattern = os.path.join("Microsoft", "Windows", "WER", "Report*", "*", "Report.wer")
-          files = [f for r in roots for f in glob.glob(os.path.join(r, pattern))]
+          for r in roots:
+              base = os.path.join(r, "Microsoft", "Windows", "WER")
+              print("WER dir", base, "->", os.listdir(base) if os.path.isdir(base) else "missing")
+          files = [f for r in roots for f in glob.glob(os.path.join(r, "Microsoft", "Windows", "WER", "**", "Report.wer"), recursive=True)]
           print("Report.wer files:", files)
+          query = eventlog.build_query(started - timedelta(seconds=5), datetime.now(UTC))
+          for xml in eventlog.query_events("Application", query):
+              entry = eventlog.parse_event(xml)
+              print("EVENT", entry.source, entry.event_id, entry.message[:300])
           keys = ("Version", "EventType", "EventTime", "ReportType", "AppName", "AppPath",
                   "Sig[", "FriendlyEventName", "TargetAppVer", "NsAppName")
           for f in files[:2]:

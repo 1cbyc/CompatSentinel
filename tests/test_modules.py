@@ -8,7 +8,12 @@ from datetime import UTC, datetime
 import pytest
 
 from compatsentinel.collectors.base import CollectorSkipped, RunContext
-from compatsentinel.collectors.modules import ModulesCollector, format_version, is_system_path
+from compatsentinel.collectors.modules import (
+    ModulesCollector,
+    format_version,
+    is_system_path,
+    looks_like_module,
+)
 
 NOW = datetime(2026, 1, 1, tzinfo=UTC)
 
@@ -32,6 +37,24 @@ def ctx(*pids: int) -> RunContext:
 )
 def test_is_system_path(path: str, expected: bool) -> None:
     assert is_system_path(path, r"C:\Windows") is expected
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        (r"C:\Windows\System32\ntdll.dll", True),
+        (r"C:\Program Files\App\App.EXE", True),
+        ("/usr/lib/x86_64-linux-gnu/libc.so.6", True),
+        ("/opt/python/lib/libpython3.11.so.1.0", True),
+        ("/opt/python/lib/_pydantic_core.cpython-311-x86_64-linux-gnu.so", True),
+        ("/usr/lib/libSystem.dylib", True),
+        (r"C:\Windows\Fonts\segoeui.ttf", False),
+        ("/usr/share/locale/locale-archive", False),
+        ("/dev/shm/something.sock", False),
+    ],
+)
+def test_looks_like_module(path: str, expected: bool) -> None:
+    assert looks_like_module(path) is expected
 
 
 def test_collects_modules_of_this_process() -> None:
