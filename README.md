@@ -39,7 +39,7 @@ compatsentinel doctor
 - **Every finding explains itself.** Rule id, severity, before and after
   values, and a one-line explanation.
 
-See [docs/DESIGN.md](docs/DESIGN.md) for the key decisions and trade-offs.
+
 
 ## License
 
