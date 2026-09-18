@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>CompatSentinel: {{ result.before_label }} vs {{ result.after_label }} ({{ result.verdict.value | upper }})</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --muted: #59636e; --card: #f6f8fa; --border: #d1d9e0;
+    --pass: #1a7f37; --warn: #9a6700; --fail: #cf222e;
+    --info: #59636e; --medium: #9a6700; --high: #cf222e; --critical: #a40e26;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --card: #161b22; --border: #30363d;
+      --pass: #2ea043; --warn: #bb8009; --fail: #da3633;
+      --info: #9198a1; --medium: #d29922; --high: #f85149; --critical: #ff7b72;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px; background: var(--bg); color: var(--fg);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 1.6em; margin: 0 0 4px; }
+  h2 { font-size: 1.2em; margin: 0 0 12px; }
+  h3 { font-size: 1.05em; margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .meta { color: var(--muted); font-size: .9em; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 16px 0; }
+  .verdict { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 700;
+             font-size: .85em; letter-spacing: .02em; color: #fff; }
+  .verdict.pass { background: var(--pass); } .verdict.warn { background: var(--warn); } .verdict.fail { background: var(--fail); }
+  .verdict.na { background: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+  .stat .n { display: block; font-size: 1.7em; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .l { color: var(--muted); font-size: .85em; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .82em; text-transform: uppercase; letter-spacing: .03em; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sev { font-weight: 700; font-size: .8em; text-transform: uppercase; white-space: nowrap; }
+  .sev.info { color: var(--info); } .sev.medium { color: var(--medium); }
+  .sev.high { color: var(--high); } .sev.critical { color: var(--critical); }
+  code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .9em; }
+  td.id { white-space: nowrap; }
+  td.wrap { overflow-wrap: anywhere; min-width: 9em; }
+  details { margin-top: 10px; } summary { cursor: pointer; color: var(--muted); }
+  .score { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 400; }
+  .arrow { color: var(--muted); }
+  ul.plain { margin: 6px 0 0; padding-left: 20px; }
+  footer { margin-top: 32px; }
+  @media print { body { padding: 0; } .card { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>CompatSentinel report</h1>
+  <p class="meta">
+    <code>{{ result.before_label }}</code> <span class="arrow">&rarr;</span> <code>{{ result.after_label }}</code>
+    {% if generated_at %}&middot; generated {{ generated_at.strftime("%Y-%m-%d %H:%M UTC") }}{% endif %}
+    &middot; compatsentinel {{ tool_version }}
+  </p>
+  <p><span class="verdict {{ result.verdict.value }}">{{ result.verdict.value | upper }}</span>
+     <span class="meta">overall verdict across {{ compared }} compared app(s)</span></p>
+  <div class="grid">
+    {% for verdict, count in verdict_counts.items() %}
+    <div class="stat"><span class="n">{{ count }}</span><span class="l">{{ verdict.value }}</span></div>
+    {% endfor %}
+    {% for severity, count in severity_counts.items() %}
+    <div class="stat"><span class="n">{{ count }}</span><span class="l">{{ severity.value }} finding(s)</span></div>
+    {% endfor %}
+  </div>
+</header>
+
+<section class="card" id="environment">
+  <h2>Environment</h2>
+  <table>
+    <thead><tr><th>Field</th><th>{{ result.before_label }}</th><th>{{ result.after_label }}</th></tr></thead>
+    <tbody>
+    {% set b = result.before_environment %}{% set a = result.after_environment %}
+    <tr><td>OS</td><td>{{ b.os_name }} {{ b.os_version }}</td><td>{{ a.os_name }} {{ a.os_version }}</td></tr>
+    <tr><td>Build / UBR</td><td>{{ b.build }} / {{ b.ubr }}</td><td>{{ a.build }} / {{ a.ubr }}</td></tr>
+    <tr><td>Version / edition</td><td>{{ b.display_version or "-" }} / {{ b.edition or "-" }}</td><td>{{ a.display_version or "-" }} / {{ a.edition or "-" }}</td></tr>
+    <tr><td>Installed KBs</td><td>{{ b.hotfixes | length }}</td><td>{{ a.hotfixes | length }}</td></tr>
+    <tr><td>.NET runtimes</td><td>{{ b.dotnet_runtimes | length }}</td><td>{{ a.dotnet_runtimes | length }}</td></tr>
+    <tr><td>VC++ redistributables</td><td>{{ b.vcpp_runtimes | length }}</td><td>{{ a.vcpp_runtimes | length }}</td></tr>
+    </tbody>
+  </table>
+  {% if result.environment_findings %}
+  <p class="meta" style="margin-bottom:0">Changes (context, never scored):</p>
+  <ul class="plain">
+    {% for finding in result.environment_findings %}
+    <li>{{ finding.message }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="meta">No environment changes between the two snapshots.</p>
+  {% endif %}
+</section>
+
+<section id="apps">
+  <h2>Apps</h2>
+  <table>
+    <thead><tr><th>App</th><th>Verdict</th><th>Score</th><th>Launch</th><th>Startup</th><th>Findings</th><th>Notes</th></tr></thead>
+    <tbody>
+    {% for app in apps %}
+    <tr>
+      <td><a href="#app-{{ app.app_id }}"><code>{{ app.app_id }}</code></a></td>
+      <td>{% if app.compared %}<span class="verdict {{ app.verdict.value }}">{{ app.verdict.value }}</span>{% else %}<span class="verdict na">n/a</span>{% endif %}</td>
+      <td class="num">{{ app.score if app.compared else "-" }}</td>
+      <td>{{ app.before_outcome.value if app.before_outcome else "-" }} <span class="arrow">&rarr;</span> {{ app.after_outcome.value if app.after_outcome else "-" }}</td>
+      <td class="num">{{ app.before_startup_ms | ms }} <span class="arrow">&rarr;</span> {{ app.after_startup_ms | ms }}
+        {% set d = app.before_startup_ms | delta(app.after_startup_ms) %}{% if d %}<br><span class="meta">{{ d }}</span>{% endif %}</td>
+      <td>
+        {% set counts = app.findings | map(attribute="severity") | list %}
+        {% if not counts %}<span class="meta">none</span>{% else %}
+        {% for severity in ["critical", "high", "medium", "info"] %}{% set n = counts | select("equalto", severity) | list | length %}{% if n %}<span class="sev {{ severity }}">{{ n }} {{ severity }}</span> {% endif %}{% endfor %}
+        {% endif %}
+      </td>
+      <td class="meta">{% if app.note %}{{ app.note }}{% endif %}{% if app.unavailable_signals %} not compared: {{ app.unavailable_signals | join(", ") }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{% for app in apps %}
+<section class="card" id="app-{{ app.app_id }}">
+  <h3><code>{{ app.app_id }}</code>
+    {% if app.compared %}<span class="verdict {{ app.verdict.value }}">{{ app.verdict.value }}</span><span class="score">score {{ app.score }}/100</span>
+    {% else %}<span class="verdict na">not compared</span>{% endif %}
+  </h3>
+  <p class="meta">
+    launch {{ app.before_outcome.value if app.before_outcome else "-" }} &rarr; {{ app.after_outcome.value if app.after_outcome else "-" }}
+    &middot; startup {{ app.before_startup_ms | ms }} &rarr; {{ app.after_startup_ms | ms }}
+    {% if app.note %}&middot; {{ app.note }}{% endif %}
+    {% if app.unavailable_signals %}&middot; not compared: {{ app.unavailable_signals | join(", ") }}{% endif %}
+  </p>
+  {% set important = app.findings | rejectattr("severity", "equalto", "info") | list %}
+  {% set informational = app.findings | selectattr("severity", "equalto", "info") | list %}
+  {% if important %}
+  <table>
+    <thead><tr><th>Rule</th><th>Severity</th><th>What changed</th><th>Before</th><th>After</th></tr></thead>
+    <tbody>
+    {% for f in important %}
+    <tr><td class="id"><code>{{ f.rule_id }}</code></td><td><span class="sev {{ f.severity.value }}">{{ f.severity.value }}</span></td>
+        <td class="wrap">{{ f.message }}</td><td class="wrap"><code>{{ f.before or "-" }}</code></td><td class="wrap"><code>{{ f.after or "-" }}</code></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% elif app.compared %}
+  <p class="meta">No regressions detected.</p>
+  {% endif %}
+  {% if informational %}
+  <details>
+    <summary>{{ informational | length }} informational finding(s)</summary>
+    <table>
+      <tbody>
+      {% for f in informational %}
+      <tr><td class="id"><code>{{ f.rule_id }}</code></td><td class="wrap">{{ f.message }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </details>
+  {% endif %}
+</section>
+{% endfor %}
+
+{% if rules %}
+<section class="card" id="rules">
+  <h2>Rules referenced in this report</h2>
+  <table>
+    <thead><tr><th>Rule</th><th>Default severity</th><th>What it detects</th></tr></thead>
+    <tbody>
+    {% for rule in rules %}
+    <tr><td class="id"><code>{{ rule.id }}</code></td><td><span class="sev {{ rule.severity.value }}">{{ rule.severity.value }}</span></td><td>{{ rule.summary }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="meta">Score: each rule counts once per app at its worst severity (critical 100, high 50, medium 20, info 0), capped at 100. FAIL at 50, WARN at 20.
+     Thresholds used: startup regression &ge; {{ result.config.startup_regression_pct | int }}% and &ge; {{ result.config.startup_regression_ms | int }} ms.</p>
+</section>
+{% endif %}
+
+<footer class="meta">Generated locally by CompatSentinel. Read-only capture, no telemetry, no external resources in this file.</footer>
+</main>
+<script type="application/json" id="compatsentinel-diff">{{ data_json }}</script>
+</body>
+</html>
