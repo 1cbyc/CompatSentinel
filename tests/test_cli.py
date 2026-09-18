@@ -5,9 +5,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
-from compatsentinel import __version__
+from compatsentinel import __version__, cli
 from compatsentinel.cli import app
 
 
@@ -120,3 +121,47 @@ def test_diff_hides_info_findings_unless_asked(runner: CliRunner) -> None:
     verbose = runner.invoke(app, [*args, "--show-info"])
     assert "hidden" not in verbose.output
     assert verbose.output.count("MODULE_VERSION_CHANGED") >= 14
+
+
+def test_report_writes_html(runner: CliRunner, tmp_path: Path) -> None:
+    out = tmp_path / "report.html"
+    result = runner.invoke(
+        app, ["report", str(EXAMPLES / "before"), str(EXAMPLES / "after"), "--html", str(out)]
+    )
+    assert result.exit_code == 0, result.output
+    assert "FAIL" in result.output
+    text = out.read_text(encoding="utf-8")
+    assert text.lower().startswith("<!doctype html>") and "contoso-ledger" in text
+
+
+def test_diff_can_also_write_html(runner: CliRunner, tmp_path: Path) -> None:
+    out = tmp_path / "r.html"
+    args = ["diff", str(EXAMPLES / "before"), str(EXAMPLES / "after"), "--html", str(out)]
+    assert runner.invoke(app, [*args, "--fail-on", "never"]).exit_code == 0
+    assert out.is_file()
+
+
+# --- Juan's Phase 4 task (b) --------------------------------------------------------------
+# Spec: open_in_browser(path) -> bool   (cli.py)
+#   * Call webbrowser.open(path.resolve().as_uri()) and return its result.
+#   * Catch any Exception and return False; never raise.
+# Test with monkeypatch so no browser actually opens. Remove the skip when done.
+
+
+@pytest.mark.skip(reason="TODO(juan): implement open_in_browser")
+def test_report_open_flag_uses_webbrowser(
+    runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    opened: list[str] = []
+    monkeypatch.setattr(cli.webbrowser, "open", lambda url: opened.append(url) or True)
+    out = tmp_path / "report.html"
+    args = [
+        "report",
+        str(EXAMPLES / "before"),
+        str(EXAMPLES / "after"),
+        "--html",
+        str(out),
+        "--open",
+    ]
+    assert runner.invoke(app, args).exit_code == 0
+    assert opened == [out.resolve().as_uri()]

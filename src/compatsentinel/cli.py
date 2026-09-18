@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, NoReturn
@@ -19,7 +20,7 @@ from rich.table import Table
 
 from compatsentinel import __version__, doctor, models, runner, store, suite
 from compatsentinel.diff import diff_snapshots, scoring
-from compatsentinel.report import terminal
+from compatsentinel.report import html, terminal
 
 app = typer.Typer(
     name="compatsentinel",
@@ -205,22 +206,20 @@ def diff(
         bool,
         typer.Option("--show-info", help="List info-level findings instead of summarising them."),
     ] = False,
+    html_path: Annotated[
+        Path | None, typer.Option("--html", help="Also write a single-file HTML report here.")
+    ] = None,
 ) -> None:
     """Compare two snapshots and print the findings with a risk score per app."""
-    snapshots = store.SnapshotStore(store_dir)
-    try:
-        before_snapshot = snapshots.load(before)
-        after_snapshot = snapshots.load(after)
-    except store.StoreError as exc:
-        _fail(str(exc))
-
-    config = models.DiffConfig(startup_regression_pct=startup_pct, startup_regression_ms=startup_ms)
-    result = diff_snapshots(before_snapshot, after_snapshot, config, app_ids)
+    result = _run_diff(before, after, store_dir, app_ids, startup_pct, startup_ms)
 
     terminal.render(result, console, show_info=show_info)
     if json_path is not None:
         json_path.write_text(result.model_dump_json(indent=2) + "\n", encoding="utf-8")
         console.print(f"[green]Wrote[/green] {json_path}")
+    if html_path is not None:
+        html.write_report(result, html_path, generated_at=datetime.now(UTC))
+        console.print(f"[green]Wrote[/green] {html_path}")
 
     threshold = {
         FailOn.NEVER: None,
@@ -231,6 +230,71 @@ def diff(
         result.verdict
     ) >= scoring.VERDICT_ORDER.index(threshold):
         raise typer.Exit(code=1)
+
+
+@app.command()
+def report(
+    before: Annotated[
+        str, typer.Argument(help="Label under --store, a snapshot folder, or a snapshot.json.")
+    ],
+    after: Annotated[str, typer.Argument(help="Same forms as BEFORE.")],
+    html_path: Annotated[
+        Path, typer.Option("--html", "-o", help="Where to write the single-file HTML report.")
+    ] = Path("report.html"),
+    store_dir: Annotated[
+        Path, typer.Option("--store", help="Directory that holds snapshots.")
+    ] = Path("snapshots"),
+    app_ids: Annotated[
+        list[str] | None, typer.Option("--app", help="Compare only this app id (repeatable).")
+    ] = None,
+    startup_pct: Annotated[
+        float, typer.Option(help="Startup regression threshold, percent.", min=0)
+    ] = 25.0,
+    startup_ms: Annotated[
+        float, typer.Option(help="Startup regression threshold, milliseconds.", min=0)
+    ] = 300.0,
+    open_after: Annotated[
+        bool, typer.Option("--open", help="Open the report in the default browser afterwards.")
+    ] = False,
+) -> None:
+    """Write a self-contained HTML report comparing two snapshots."""
+    result = _run_diff(before, after, store_dir, app_ids, startup_pct, startup_ms)
+    path = html.write_report(result, html_path, generated_at=datetime.now(UTC))
+    style = terminal.VERDICT_STYLE[result.verdict]
+    console.print(
+        f"[green]Wrote[/green] {path}  (verdict: [{style}]{result.verdict.value.upper()}[/{style}])"
+    )
+    if open_after:
+        open_in_browser(path)
+
+
+def open_in_browser(path: Path) -> bool:
+    """Open ``path`` with the default browser; return whether a browser was launched.
+
+    Must never raise: on a headless host there is no browser, and the report
+    was still written. Use ``Path.resolve()`` and ``as_uri()`` so the file is
+    opened by URL, which works on Windows and Unix alike.
+    """
+    return False  # TODO(juan): implement; see tests/test_cli.py
+
+
+def _run_diff(
+    before: str,
+    after: str,
+    store_dir: Path,
+    app_ids: list[str] | None,
+    startup_pct: float,
+    startup_ms: float,
+) -> models.DiffResult:
+    """Load both snapshots and diff them, turning store errors into a clean exit."""
+    snapshots = store.SnapshotStore(store_dir)
+    try:
+        before_snapshot = snapshots.load(before)
+        after_snapshot = snapshots.load(after)
+    except store.StoreError as exc:
+        _fail(str(exc))
+    config = models.DiffConfig(startup_regression_pct=startup_pct, startup_regression_ms=startup_ms)
+    return diff_snapshots(before_snapshot, after_snapshot, config, app_ids)
 
 
 def _print_capture_summary(snapshot: models.Snapshot) -> None:
