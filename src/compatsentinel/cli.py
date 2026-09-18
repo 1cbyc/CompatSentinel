@@ -6,14 +6,17 @@ call into the library, render the result. No business logic lives here.
 
 from __future__ import annotations
 
+import logging
+import sys
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, NoReturn
 
 import typer
 from rich.console import Console
+from rich.logging import RichHandler
 from rich.table import Table
 
-from compatsentinel import __version__, doctor, suite
+from compatsentinel import __version__, doctor, models, runner, store, suite
 
 app = typer.Typer(
     name="compatsentinel",
@@ -42,6 +45,13 @@ def main(
     ),
 ) -> None:
     """Capture behavioural fingerprints of Windows apps and diff them across updates."""
+    # Library code logs degraded signals (e.g. a registry key it could not read);
+    # surface those as warnings without cluttering normal output.
+    logging.basicConfig(
+        level=logging.WARNING,
+        format="%(message)s",
+        handlers=[RichHandler(console=console, show_path=False, show_time=False)],
+    )
 
 
 @app.command("doctor")
@@ -59,7 +69,15 @@ def doctor_command() -> None:
     table.add_row("Machine", report.machine)
     table.add_row("pywin32", _yes_no(report.pywin32_available))
     table.add_row("Capture supported", _yes_no(report.capture_supported))
+    if report.wer_enabled is not None:
+        table.add_row("Windows Error Reporting", _yes_no(report.wer_enabled))
     console.print(table)
+
+    if report.wer_enabled is False:
+        console.print(
+            "[yellow]WER is disabled on this host: crash reports and Application Error "
+            "events will not be produced, so CRASH_NEW cannot fire.[/yellow]"
+        )
 
     if not report.capture_supported:
         console.print(
@@ -100,6 +118,95 @@ def validate(
         )
     console.print(table)
     console.print("[green]Suite is valid.[/green]")
+
+
+@app.command()
+def capture(
+    suite_path: Annotated[
+        Path, typer.Option("--suite", "-s", help="Suite file (apps.yaml).", metavar="SUITE")
+    ],
+    label: Annotated[
+        str, typer.Option("--label", "-l", help="Name for this snapshot, e.g. 'before'.")
+    ],
+    store_dir: Annotated[
+        Path, typer.Option("--store", help="Directory that holds snapshots.")
+    ] = Path("snapshots"),
+    only: Annotated[
+        list[str] | None, typer.Option("--only", help="Run only this app id (repeatable).")
+    ] = None,
+    overwrite: Annotated[
+        bool, typer.Option("--overwrite", help="Replace an existing snapshot with this label.")
+    ] = False,
+) -> None:
+    """Launch every app in the suite and record its behavioural fingerprint (Windows only)."""
+    if sys.platform != "win32":
+        _fail("capture needs Windows 10 or 11. diff, report and mcp run anywhere.")
+
+    snapshots = store.SnapshotStore(store_dir)
+    try:
+        store.validate_label(label)
+        if snapshots.exists(label) and not overwrite:
+            _fail(
+                f"snapshot {label!r} already exists in {store_dir}; use --overwrite or a new label"
+            )
+        loaded = suite.load_suite(suite_path)
+    except (store.StoreError, suite.SuiteError) as exc:
+        _fail(str(exc))
+
+    if only:
+        unknown = sorted(set(only) - {spec.id for spec in loaded.apps})
+        if unknown:
+            _fail(f"unknown app id(s): {', '.join(unknown)}")
+
+    snapshot = runner.capture(
+        loaded, label, only=only, progress=lambda line: console.print(f"[dim]>[/dim] {line}")
+    )
+    path = snapshots.save(snapshot, overwrite=overwrite)
+    _print_capture_summary(snapshot)
+    console.print(f"[green]Saved[/green] {path}")
+
+
+def _print_capture_summary(snapshot: models.Snapshot) -> None:
+    env = snapshot.environment
+    console.print(
+        f"[bold]{env.os_name}[/bold] {env.os_version}"
+        + (f" UBR {env.ubr}" if env.ubr is not None else "")
+        + (f" ({env.display_version})" if env.display_version else "")
+        + f", {len(env.hotfixes)} hotfixes"
+    )
+    table = Table(title=f"snapshot '{snapshot.label}': {len(snapshot.apps)} app(s)")
+    table.add_column("app", style="bold")
+    table.add_column("outcome")
+    table.add_column("startup", justify="right")
+    table.add_column("modules", justify="right")
+    table.add_column("events", justify="right")
+    table.add_column("wer", justify="right")
+    table.add_column("collector notes")
+    for run in snapshot.apps:
+        launch = run.launch
+        outcome = launch.outcome.value if launch else "-"
+        style = "green" if outcome == "ok" else "red"
+        startup = f"{launch.startup_ms:.0f} ms" if launch and launch.startup_ms else "-"
+        notes = "; ".join(
+            f"{r.name}: {r.status.value}" + (f" ({r.error})" if r.error else "")
+            for r in run.collectors
+            if r.status is not models.CollectorStatus.OK
+        )
+        table.add_row(
+            run.app_id,
+            f"[{style}]{outcome}[/{style}]",
+            startup,
+            str(len(run.modules)) if run.modules is not None else "-",
+            str(len(run.events)) if run.events is not None else "-",
+            str(len(run.wer)) if run.wer is not None else "-",
+            notes or "-",
+        )
+    console.print(table)
+
+
+def _fail(message: str) -> NoReturn:
+    console.print(message, style="red", markup=False)
+    raise typer.Exit(code=1)
 
 
 def _yes_no(value: bool) -> str:
