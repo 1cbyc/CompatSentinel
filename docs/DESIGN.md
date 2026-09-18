@@ -90,3 +90,63 @@ capturing stdout.
 
 Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `ci:`),
 one logical change per commit. Commits are authored by the project owner only.
+
+## Phase 1: models, suite, store
+
+### One strict base model
+
+Every model inherits `StrictModel`, which sets `extra="forbid"` and
+`frozen=True`. Forbidding extras turns a typo such as `windows_title_regex`
+into an error that names the key, instead of a suite that silently never
+matches a window. Freezing makes the diff engine safe: it receives snapshots
+and cannot mutate them by accident, so two diffs of the same inputs always
+agree.
+
+Trade-off: strict models reject snapshots written by a *newer* tool that added
+a field. That is intentional; the schema version check gives a clearer error
+than a partially understood snapshot would.
+
+### `None` versus empty list
+
+`AppRun.modules`, `events` and `wer` are `list | None`. `None` means the
+collector did not produce data (skipped, needs elevation, crashed). `[]` means
+it ran and found nothing. Without that distinction, a collector failing on the
+"after" side would look like every DLL vanished and every rule would fire.
+
+### Schema version lives in the file, not the filename
+
+`schema_version` is a plain integer field with a default. The store refuses
+files newer than it understands and can add per-version migrations later.
+Keeping it inside the JSON means a snapshot copied between machines or
+attached to a ticket stays self describing.
+
+### Suite validation errors are formatted, not re-raised
+
+pydantic's `ValidationError` is precise but noisy. `format_validation_error`
+flattens it to one line per problem in the form `apps.0.command: Field
+required`, which is how a sysadmin counts entries in a YAML list. The
+`SuiteError` message is the user interface; the original exception is chained
+for debugging.
+
+### Store layout and atomic writes
+
+`snapshots/<label>/snapshot.json`. A directory per label leaves room for
+sidecar files (HTML report, raw logs) without renaming anything. Writes go to
+`snapshot.json.tmp` and are renamed into place, so a crash or Ctrl+C during
+capture never leaves a truncated file that the diff would then misread.
+
+`resolve()` accepts a label, a directory or a file so
+`compatsentinel diff examples/snapshots/before examples/snapshots/after` works
+from any working directory without a flag. Paths win over labels because a
+path that exists is unambiguous; a label is a lookup.
+
+### Labels are validated before touching disk
+
+Labels become directory names. The pattern rejects path separators and
+leading dots, so a label like `../etc` cannot escape the store root.
+
+### Test fixtures use a factory, not JSON files, so far
+
+`make_snapshot()` builds snapshots in code with overrides. Recorded JSON
+fixtures arrive with the diff engine in Phase 3, once real captures exist to
+record; until then a factory keeps tests short and typed.

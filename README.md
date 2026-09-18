@@ -16,7 +16,7 @@ compatsentinel diff before after --html report.html
 compatsentinel mcp            # expose snapshots to an AI assistant, read-only
 ```
 
-**Status:** early development. Only `doctor` exists today. Follow the
+**Status:** early development. `doctor` and `validate` exist today. Follow the
 [changelog](CHANGELOG.md) and the roadmap in the issues.
 
 ## Install (development)
