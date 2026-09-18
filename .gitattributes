@@ -1,0 +1,4 @@
+# Keep LF everywhere so Windows and Linux contributors produce identical diffs.
+* text=auto eol=lf
+*.png binary
+*.gif binary
