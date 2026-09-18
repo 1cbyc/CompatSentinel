@@ -16,7 +16,7 @@ compatsentinel diff before after --html report.html
 compatsentinel mcp            # expose snapshots to an AI assistant, read-only
 ```
 
-**Status:** early development. `capture`, `diff`, `doctor` and `validate` exist today; the HTML report and `mcp` are next. Follow the
+**Status:** early development. `capture`, `diff`, `report`, `doctor` and `validate` exist today; `mcp` is next. Follow the
 [changelog](CHANGELOG.md) and the roadmap in the issues.
 
 ## Try it in 30 seconds, no Windows required
@@ -28,9 +28,11 @@ lost a DLL, a line-of-business app started crashing, and WordPad is gone.
 ```bash
 pipx install git+https://github.com/juandresrodca/CompatSentinel   # or the dev install below
 compatsentinel diff examples/snapshots/before examples/snapshots/after
+compatsentinel report examples/snapshots/before examples/snapshots/after --html report.html
 ```
 
-The demo data mixes real module lists from a Windows 11 capture with
+The HTML report is a single offline file that follows your light or dark
+theme. The demo data mixes real module lists from a Windows 11 capture with
 fabricated apps and regressions; nothing in it identifies a real machine.
 
 ## Install (development)

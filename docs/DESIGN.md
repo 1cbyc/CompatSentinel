@@ -349,3 +349,58 @@ copy under `tests/fixtures` would only create a drift risk.
 `diff --fail-on {never,warn,fail}` maps the verdict to the exit status so a
 Patch Tuesday pipeline can gate on it. The default fails only on FAIL because
 WARN-level findings are expected after an OS update.
+
+## Phase 4: reports
+
+### One HTML file, nothing external
+
+The report is meant to be attached to a change ticket or dropped on a file
+share and opened on a machine with no internet. So: inline CSS, system fonts,
+no JavaScript libraries, no images, no requests of any kind. A test asserts
+there is no `<link>`, `<script src>`, `@import` or `url(` in the output and no
+`http(s)://` in any `src` or `href`.
+
+### Jinja2 with autoescape, not f-strings
+
+Findings contain event log text and file paths straight from the machine
+under test. A template engine with autoescaping on by default is the cheap,
+boring way to make `<script>` in an event message harmless. The one place
+autoescaping is bypassed is the embedded JSON block, where the only dangerous
+sequence is `</` (it would end the `<script>` element), and it is escaped by
+hand as `<\/`, which JSON parsers accept unchanged.
+
+### The report carries its own data
+
+The full `DiffResult` is embedded as `<script type="application/json">`. A
+reader gets a document; a tool gets the exact structured result that produced
+it, without re-running the diff. It costs about a third of the file size and
+removes a whole class of "which version of the diff was this report from"
+questions.
+
+### Light and dark without a toggle
+
+Colours are CSS custom properties defined once for light and once under
+`@media (prefers-color-scheme: dark)`, plus `<meta name="color-scheme">` so
+form controls and scrollbars follow. No JavaScript, no stored preference: the
+report matches whatever the reader's OS already does.
+
+### Presentation never computes
+
+`report/html.py` and `report/terminal.py` only format. Verdicts, scores and
+severities come from `DiffResult`, so the terminal, the HTML and the MCP
+server can never disagree. The template's small helpers (`ms`, `delta`) are
+plain functions registered as Jinja filters, unit tested like any other.
+
+### Info findings collapse
+
+Fourteen "system DLL updated" lines per app are true and useless at a glance.
+Both renderers show findings above info level in the table and fold the rest
+behind a `<details>` element (HTML) or a one-line summary (terminal,
+`--show-info` to expand).
+
+### `report` versus `diff --html`
+
+`diff` is the interactive command and can also write HTML; `report` exists
+for scripts that only want the file and a verdict on stdout, without the
+terminal tables. Both go through the same `_run_diff` helper so option
+handling cannot diverge.
