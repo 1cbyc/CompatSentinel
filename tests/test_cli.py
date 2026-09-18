@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -49,3 +50,73 @@ def test_validate_reports_errors_and_exits_1(runner: CliRunner, tmp_path: Path) 
     result = runner.invoke(app, ["validate", str(bad)])
     assert result.exit_code == 1
     assert "apps.0.command" in result.output
+
+
+EXAMPLES = Path(__file__).resolve().parent.parent / "examples" / "snapshots"
+
+
+def test_diff_examples_fails_by_default(runner: CliRunner) -> None:
+    result = runner.invoke(app, ["diff", str(EXAMPLES / "before"), str(EXAMPLES / "after")])
+    assert result.exit_code == 1, result.output
+    assert "Overall verdict: FAIL" in result.output
+    assert "contoso-ledger" in result.output
+    assert "LAUNCH_FAILED" in result.output
+    assert "Environment changes" in result.output
+
+
+def test_diff_fail_on_never_and_json_export(runner: CliRunner, tmp_path: Path) -> None:
+    out = tmp_path / "diff.json"
+    result = runner.invoke(
+        app,
+        [
+            "diff",
+            str(EXAMPLES / "before"),
+            str(EXAMPLES / "after"),
+            "--fail-on",
+            "never",
+            "--json",
+            str(out),
+            "--app",
+            "notepad",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    data = json.loads(out.read_text(encoding="utf-8"))
+    assert data["verdict"] == "warn"
+    assert [item["app_id"] for item in data["apps"]] == ["notepad"]
+
+
+def test_diff_fail_on_warn(runner: CliRunner) -> None:
+    args = ["diff", str(EXAMPLES / "before"), str(EXAMPLES / "after"), "--app", "notepad"]
+    assert runner.invoke(app, args).exit_code == 0  # WARN does not fail by default
+    assert runner.invoke(app, [*args, "--fail-on", "warn"]).exit_code == 1
+
+
+def test_diff_thresholds_are_tunable(runner: CliRunner) -> None:
+    args = ["diff", str(EXAMPLES / "before"), str(EXAMPLES / "after"), "--app", "notepad"]
+    relaxed = runner.invoke(app, [*args, "--startup-pct", "200"])
+    assert relaxed.exit_code == 0
+    assert "STARTUP_REGRESSION" not in relaxed.output
+
+
+def test_diff_with_labels_under_store(runner: CliRunner) -> None:
+    result = runner.invoke(
+        app, ["diff", "before", "after", "--store", str(EXAMPLES), "--fail-on", "never"]
+    )
+    assert result.exit_code == 0, result.output
+
+
+def test_diff_missing_snapshot_is_a_clean_error(runner: CliRunner, tmp_path: Path) -> None:
+    result = runner.invoke(app, ["diff", "nope", "after", "--store", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "not found" in result.output
+
+
+def test_diff_hides_info_findings_unless_asked(runner: CliRunner) -> None:
+    args = ["diff", str(EXAMPLES / "before"), str(EXAMPLES / "after"), "--app", "notepad"]
+    quiet = runner.invoke(app, args)
+    assert "info finding(s) hidden" in quiet.output
+    assert "MODULE_VERSION_CHANGED" not in quiet.output.split("finding(s) hidden")[0]
+    verbose = runner.invoke(app, [*args, "--show-info"])
+    assert "hidden" not in verbose.output
+    assert verbose.output.count("MODULE_VERSION_CHANGED") >= 14

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, NoReturn
 
@@ -17,6 +18,8 @@ from rich.logging import RichHandler
 from rich.table import Table
 
 from compatsentinel import __version__, doctor, models, runner, store, suite
+from compatsentinel.diff import diff_snapshots, scoring
+from compatsentinel.report import terminal
 
 app = typer.Typer(
     name="compatsentinel",
@@ -164,6 +167,70 @@ def capture(
     path = snapshots.save(snapshot, overwrite=overwrite)
     _print_capture_summary(snapshot)
     console.print(f"[green]Saved[/green] {path}")
+
+
+class FailOn(StrEnum):
+    """Which verdict makes ``diff`` exit non-zero, for use in scripts and CI."""
+
+    NEVER = "never"
+    WARN = "warn"
+    FAIL = "fail"
+
+
+@app.command()
+def diff(
+    before: Annotated[
+        str, typer.Argument(help="Label under --store, a snapshot folder, or a snapshot.json.")
+    ],
+    after: Annotated[str, typer.Argument(help="Same forms as BEFORE.")],
+    store_dir: Annotated[
+        Path, typer.Option("--store", help="Directory that holds snapshots.")
+    ] = Path("snapshots"),
+    app_ids: Annotated[
+        list[str] | None, typer.Option("--app", help="Compare only this app id (repeatable).")
+    ] = None,
+    startup_pct: Annotated[
+        float, typer.Option(help="Startup regression threshold, percent.", min=0)
+    ] = 25.0,
+    startup_ms: Annotated[
+        float, typer.Option(help="Startup regression threshold, milliseconds.", min=0)
+    ] = 300.0,
+    json_path: Annotated[
+        Path | None, typer.Option("--json", help="Also write the full result as JSON here.")
+    ] = None,
+    fail_on: Annotated[
+        FailOn, typer.Option(help="Exit with status 1 at this verdict or worse.")
+    ] = FailOn.FAIL,
+    show_info: Annotated[
+        bool,
+        typer.Option("--show-info", help="List info-level findings instead of summarising them."),
+    ] = False,
+) -> None:
+    """Compare two snapshots and print the findings with a risk score per app."""
+    snapshots = store.SnapshotStore(store_dir)
+    try:
+        before_snapshot = snapshots.load(before)
+        after_snapshot = snapshots.load(after)
+    except store.StoreError as exc:
+        _fail(str(exc))
+
+    config = models.DiffConfig(startup_regression_pct=startup_pct, startup_regression_ms=startup_ms)
+    result = diff_snapshots(before_snapshot, after_snapshot, config, app_ids)
+
+    terminal.render(result, console, show_info=show_info)
+    if json_path is not None:
+        json_path.write_text(result.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        console.print(f"[green]Wrote[/green] {json_path}")
+
+    threshold = {
+        FailOn.NEVER: None,
+        FailOn.WARN: models.Verdict.WARN,
+        FailOn.FAIL: models.Verdict.FAIL,
+    }[fail_on]
+    if threshold is not None and scoring.VERDICT_ORDER.index(
+        result.verdict
+    ) >= scoring.VERDICT_ORDER.index(threshold):
+        raise typer.Exit(code=1)
 
 
 def _print_capture_summary(snapshot: models.Snapshot) -> None:
