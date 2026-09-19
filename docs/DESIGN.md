@@ -520,3 +520,15 @@ gets a positive and negative test; a collector satisfies the `Collector`
 protocol structurally, no base class). The security policy states the
 read-only guarantees as things a report should hold the project to, which
 only works because Phase 2 through 5 actually built it that way.
+
+### Release automation had a bug, caught before it mattered
+
+The first `.github/workflows/publish.yml` run against the `v0.1.0` tag
+failed its version check with `tag=0.1.0 version=None0.1.0` — a leftover
+debug `python -c` from drafting the script got concatenated with the real
+version through command substitution. Fixed by removing the stray line and
+verified by re-triggering the workflow manually (`workflow_dispatch`)
+against the same tag: the build step now passes and the run fails only at
+the actual PyPI publish step, with the OIDC trust error PyPI's own
+troubleshooting docs describe — the expected state until the one-time
+trusted-publisher registration happens on pypi.org.
