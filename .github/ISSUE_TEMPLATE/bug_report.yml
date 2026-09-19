@@ -1,0 +1,61 @@
+name: Bug report
+description: Something in capture, diff, report, or the MCP server is not working as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The more of this you can fill in, the faster it gets fixed.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and output
+      description: The exact `compatsentinel ...` command and its full output.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: "`compatsentinel doctor` output"
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: compatsentinel version
+      description: Output of `compatsentinel --version`
+    validations:
+      required: true
+
+  - type: textarea
+    id: suite
+    attributes:
+      label: Suite file (apps.yaml), if relevant
+      render: yaml
+    validations:
+      required: false
+
+  - type: textarea
+    id: snapshot
+    attributes:
+      label: Snapshot excerpt, if relevant
+      description: >-
+        A relevant part of a snapshot.json, or the whole file if you are
+        comfortable sharing it. Snapshots contain local file paths and
+        Windows update (KB) ids for your machine; redact anything sensitive.
+      render: json
+    validations:
+      required: false

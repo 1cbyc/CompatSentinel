@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ask a question
+    url: https://github.com/juandresrodca/CompatSentinel/discussions
+    about: Usage questions, ideas and general discussion belong in Discussions, not Issues.
+  - name: Report a security vulnerability
+    url: https://github.com/juandresrodca/CompatSentinel/security/advisories/new
+    about: Please do not open a public issue for a security report — see SECURITY.md.

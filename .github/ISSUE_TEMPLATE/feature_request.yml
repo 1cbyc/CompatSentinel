@@ -1,0 +1,29 @@
+name: Feature request
+description: A new diff rule, collector, or other improvement.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to detect or do that CompatSentinel cannot today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: >-
+        If this is a new diff rule: what triggers it, what severity, what
+        would the finding message say? If a new collector: what Windows API
+        or data source, and have you verified it works the way you think?
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
