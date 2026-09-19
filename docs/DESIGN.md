@@ -404,3 +404,77 @@ behind a `<details>` element (HTML) or a one-line summary (terminal,
 for scripts that only want the file and a verdict on stdout, without the
 terminal tables. Both go through the same `_run_diff` helper so option
 handling cannot diverge.
+
+## Phase 5: MCP server
+
+### FastMCP, pinned to the 1.x line
+
+The official Python SDK's `mcp` package released a 2.0 during this project
+that renamed `FastMCP` to `MCPServer` and reworked several constructor
+signatures. Version 2.2.0 installs by default from PyPI today. I pinned
+`mcp>=1.2,<2` deliberately: 1.x is what every current guide, the MCP
+Inspector's own examples, and the Claude Desktop docs still show, and 2.x is
+days old with essentially no ecosystem examples yet. `FastMCP` in 1.x is a
+thin, well-understood wrapper over the same protocol types; nothing here
+depends on a 2.x-only feature. This is recorded so the choice reads as
+deliberate, not stale, if revisited later.
+
+### The server never imports the runner
+
+`mcp_server.py` imports `store`, `diff` and `models`, and nothing else from
+the package. It does not import `runner`, any `collectors` module, or
+`subprocess`. `test_server_never_imports_the_runner` asserts this by
+inspecting the module's own namespace, so a future edit that accidentally
+wires up a "capture" tool fails CI immediately rather than being caught in
+review. This is the concrete form of "read only, mirrors IntuneGraph": not a
+comment, a test.
+
+### Five tools, one resource template
+
+`list_snapshots`, `get_environment`, `get_app_run`, `diff`, `explain_finding`
+match the brief exactly. Each is a thin wrapper: load from `SnapshotStore`,
+call the pure diff engine or look up the rule registry, return a pydantic
+model. FastMCP serialises a returned `BaseModel` to the tool's structured
+content automatically, so the assistant gets typed JSON, not a hand-built
+dict, for every tool except `explain_finding` (a small `dict[str, str]`,
+since `Rule` is a dataclass holding a Python function and is not meant to
+cross the wire).
+
+One resource template, `snapshot://{label}`, exposes the raw snapshot JSON
+for a client that wants the whole file rather than a filtered tool call.
+
+### Errors become tool errors, not crashes
+
+Every lookup failure (`store.StoreError`, a missing app id, an unknown rule
+id) is raised as `ValueError` with a message that names what was requested
+and what does exist (`get_app_run` lists the real app ids on a miss). FastMCP
+turns an exception raised inside a tool into `isError: true` with that
+message as the content; the server process itself never exits. Verified
+against the real MCP Inspector CLI, not just the in-process test client.
+
+### Testing: an in-process client, not a subprocess
+
+`create_connected_server_and_client_session` wires a real `ClientSession` to
+the server's request handlers over in-memory streams, so tests exercise the
+same protocol path a real client uses without a stdio subprocess. Each test
+opens its own session inside one `async with` in the test body rather than
+through a fixture: an async-generator fixture runs its setup and teardown as
+separate scheduled coroutines, and the server's internal `anyio` task group
+must be entered and exited in the same task, so the fixture form raised
+"cancel scope in a different task" errors that the inline form does not.
+
+### `list_labels` was implemented ahead of its task
+
+`SnapshotStore.list_labels()` was left as a Phase 1 exercise for Juan. The
+`list_snapshots` MCP tool depends on it directly, so it was implemented now
+to keep Phase 5 working end to end; the two tests that exercised it were
+un-skipped rather than left broken. Every other open task is untouched.
+
+### Verification
+
+Beyond the pytest suite (in-process client, 17 tests), the server was run for
+real: `compatsentinel mcp --store examples/snapshots` starts and blocks on
+stdio as expected, and the MCP Inspector CLI (`npx
+@modelcontextprotocol/inspector --cli`) connected over stdio, listed all five
+tools with their generated JSON schemas, called each one including the error
+paths, and listed and matched the `snapshot://{label}` resource template.

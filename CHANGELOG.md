@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `compatsentinel mcp`: read-only MCP server (list_snapshots, get_environment, get_app_run, diff, explain_finding) plus a `snapshot://{label}` resource, verified with the MCP Inspector.
+- `python -m compatsentinel` as an alternative entry point.
 - `compatsentinel report` and `diff --html`: single-file HTML report with inline CSS, light and dark mode, collapsed info findings, and the full diff result embedded as JSON. No external requests.
 - `compatsentinel diff`: pure, deterministic comparison of two snapshots with eight rules (LAUNCH_FAILED, CRASH_NEW, EXIT_CODE_CHANGED, STARTUP_REGRESSION, MODULE_MISSING, MODULE_VERSION_CHANGED, EVENTLOG_NEW_ERRORS, ENV_CHANGED), a per-app risk score and PASS/WARN/FAIL verdicts, `--json` export and `--fail-on` exit codes.
 - Demo snapshots under `examples/snapshots` (23H2 to 24H2 upgrade story) that run on any OS.
