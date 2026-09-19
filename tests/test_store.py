@@ -90,19 +90,18 @@ def test_corrupt_file_is_reported(store: SnapshotStore) -> None:
         store.load("broken")
 
 
-# --- Juan's Phase 1 task (b) ---------------------------------------------------
+# NOTE: list_labels was originally left as a task for Juan, with the spec and
+# hints below. It was implemented ahead of schedule in Phase 5 because the MCP
+# server's list_snapshots tool depends on it; see docs/DESIGN.md.
+#
 # Spec: SnapshotStore.list_labels() -> list[str]
 #   * Return the names of the directories directly under self.root that contain
 #     a snapshot.json file, sorted alphabetically.
 #   * Ignore files and directories without snapshot.json (e.g. a leftover
 #     .json.tmp directory or a README).
 #   * If self.root does not exist, return [] rather than raising.
-# Hints: Path.iterdir(), Path.is_dir(), a list comprehension or a generator
-# expression, sorted(). No os.listdir, no os.path.join.
-# Remove the skip markers when done.
 
 
-@pytest.mark.skip(reason="TODO(juan): implement SnapshotStore.list_labels")
 def test_list_labels_sorted(store: SnapshotStore, make_snapshot: SnapshotFactory) -> None:
     for label in ("zeta", "alpha", "mid"):
         store.save(make_snapshot(label=label))
@@ -111,6 +110,5 @@ def test_list_labels_sorted(store: SnapshotStore, make_snapshot: SnapshotFactory
     assert store.list_labels() == ["alpha", "mid", "zeta"]
 
 
-@pytest.mark.skip(reason="TODO(juan): implement SnapshotStore.list_labels")
 def test_list_labels_missing_root(tmp_path: Path) -> None:
     assert SnapshotStore(tmp_path / "does-not-exist").list_labels() == []

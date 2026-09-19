@@ -127,4 +127,8 @@ class SnapshotStore:
         A label counts only when ``<root>/<label>/snapshot.json`` exists. A
         missing root simply means there are no snapshots.
         """
-        raise NotImplementedError("TODO(juan): implement SnapshotStore.list_labels")
+        if not self.root.is_dir():
+            return []
+        return sorted(
+            entry.name for entry in self.root.iterdir() if (entry / SNAPSHOT_FILENAME).is_file()
+        )
