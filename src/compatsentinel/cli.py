@@ -18,7 +18,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Table
 
-from compatsentinel import __version__, doctor, models, runner, store, suite
+from compatsentinel import __version__, doctor, mcp_server, models, runner, store, suite
 from compatsentinel.diff import diff_snapshots, scoring
 from compatsentinel.report import html, terminal
 
@@ -295,6 +295,22 @@ def _run_diff(
         _fail(str(exc))
     config = models.DiffConfig(startup_regression_pct=startup_pct, startup_regression_ms=startup_ms)
     return diff_snapshots(before_snapshot, after_snapshot, config, app_ids)
+
+
+@app.command("mcp")
+def mcp_command(
+    store_dir: Annotated[
+        Path, typer.Option("--store", help="Directory that holds snapshots.")
+    ] = Path("snapshots"),
+) -> None:
+    """Run the read-only MCP server over stored snapshots (stdio transport).
+
+    Exposes list_snapshots, get_environment, get_app_run, diff and
+    explain_finding to an MCP client such as Claude Desktop or the MCP
+    Inspector. No tool can launch, close or otherwise touch a process; see
+    src/compatsentinel/mcp_server.py.
+    """
+    mcp_server.run(store_dir)
 
 
 def _print_capture_summary(snapshot: models.Snapshot) -> None:
