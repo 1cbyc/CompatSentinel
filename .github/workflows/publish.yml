@@ -37,7 +37,7 @@ jobs:
         if: github.event_name == 'release'
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          version=$(python -c "import tomllib; print({'name':1}.get('x'))" 2>/dev/null; python -c "
+          version=$(python -c "
           import re
           text = open('src/compatsentinel/__init__.py').read()
           print(re.search(r'__version__ = \"([^\"]+)\"', text).group(1))
