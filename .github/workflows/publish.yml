@@ -1,0 +1,69 @@
+name: Publish to PyPI
+
+# Runs when a GitHub Release is published. Uses PyPI's trusted publishing
+# (OIDC): no API token is stored in this repo. Before the first release, the
+# PyPI project must be configured with this repo as a trusted publisher
+# (Settings -> Publishing on the PyPI project page, or pre-create the
+# project via "Add a new pending publisher" on
+# https://pypi.org/manage/account/publishing/). Until that one-time setup is
+# done, this workflow will fail at the "Publish" step with an authentication
+# error; the release itself is unaffected.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # allow a manual re-run from the Actions tab if publish failed
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Check version matches the tag
+        if: github.event_name == 'release'
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version=$(python -c "import tomllib; print({'name':1}.get('x'))" 2>/dev/null; python -c "
+          import re
+          text = open('src/compatsentinel/__init__.py').read()
+          print(re.search(r'__version__ = \"([^\"]+)\"', text).group(1))
+          ")
+          echo "tag=$tag version=$version"
+          test "$tag" = "$version"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/compatsentinel/
+    permissions:
+      id-token: write # required for trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
