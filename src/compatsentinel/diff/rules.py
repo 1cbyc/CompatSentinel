@@ -140,6 +140,28 @@ def module_missing(before: AppRun, after: AppRun, ctx: RuleContext) -> list[Find
     ]
 
 
+def module_added(before: AppRun, after: AppRun, ctx: RuleContext) -> list[Finding]:
+    """A DLL that was not loaded before is loaded now."""
+    if before.modules is None or after.modules is None:
+        return []
+    before_names = {m.name.lower() for m in before.modules}
+    added = sorted(
+        (m for m in after.modules if m.name.lower() not in before_names),
+        key=lambda m: m.name.lower(),
+    )
+    return [
+        _finding(
+            "MODULE_ADDED",
+            Severity.INFO,
+            before,
+            f"{m.name} is now loaded (was not loaded before)",
+            "not loaded",
+            m.path,
+        )
+        for m in added
+    ]
+
+
 def module_version_changed(before: AppRun, after: AppRun, ctx: RuleContext) -> list[Finding]:
     """Same DLL, different file version.
 
@@ -230,6 +252,12 @@ RULES: tuple[Rule, ...] = (
         Severity.MEDIUM,
         "A DLL loaded before is no longer loaded.",
         module_missing,
+    ),
+    Rule(
+        "MODULE_ADDED",
+        Severity.INFO,
+        "A DLL not loaded before is now loaded.",
+        module_added,
     ),
     Rule(
         "MODULE_VERSION_CHANGED",

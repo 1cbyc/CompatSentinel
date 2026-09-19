@@ -177,6 +177,35 @@ def test_module_missing_is_silent_without_module_data() -> None:
     assert rules.module_missing(make_run(), make_run(no_modules=True), CTX) == []
 
 
+# --- MODULE_ADDED --------------------------------------------------------------------------
+
+
+def test_module_added() -> None:
+    added = ModuleInfo(
+        name="New.Runtime.dll",
+        path=r"C:\Program Files\Contoso\New.Runtime.dll",
+        version="1.0.0.0",
+    )
+    findings = rules.module_added(
+        make_run(), make_run(modules=[*SYSTEM_MODULES, *APP_MODULES, added]), CTX
+    )
+    assert ids(findings) == ["MODULE_ADDED"]
+    assert findings[0].severity is Severity.INFO
+    assert "New.Runtime.dll" in findings[0].message
+    assert findings[0].before == "not loaded"
+    assert findings[0].after == added.path
+
+
+def test_module_added_matches_names_case_insensitively() -> None:
+    renamed = [m.model_copy(update={"name": m.name.upper()}) for m in SYSTEM_MODULES + APP_MODULES]
+    assert rules.module_added(make_run(), make_run(modules=renamed), CTX) == []
+
+
+def test_module_added_is_silent_without_module_data() -> None:
+    assert rules.module_added(make_run(no_modules=True), make_run(), CTX) == []
+    assert rules.module_added(make_run(), make_run(no_modules=True), CTX) == []
+
+
 # --- MODULE_VERSION_CHANGED --------------------------------------------------------------------
 
 
