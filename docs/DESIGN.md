@@ -478,3 +478,45 @@ stdio as expected, and the MCP Inspector CLI (`npx
 @modelcontextprotocol/inspector --cli`) connected over stdio, listed all five
 tools with their generated JSON schemas, called each one including the error
 paths, and listed and matched the `snapshot://{label}` resource template.
+
+## Phase 6: launch readiness
+
+### The README claims nothing the repo cannot back up
+
+Every code block in the README was run for real during development: the
+30-second demo against `examples/snapshots`, the Patch Tuesday quick start
+against the same suite shape as `examples/apps.yaml`, and the MCP example
+conversation was captured verbatim from the MCP Inspector, not written from
+memory (see the Phase 5 notes above). The "what it does not capture" section
+exists so the tool's boundary is a documented decision, not a surprise a
+user hits later.
+
+### The demo GIF is a recording brief, not a recording
+
+I cannot drive a native Windows GUI application from this environment, so
+the README carries an HTML comment with exact recording instructions
+(resolution, theme, the four commands to run and in what order, where to
+save the file) instead of a placeholder image. Whoever records it — Juan —
+replaces the comment with one Markdown image line. This keeps the README
+honest: no broken image link, no faked screenshot.
+
+### PyPI publish is wired but not triggered
+
+`.github/workflows/publish.yml` builds the package and publishes via PyPI's
+trusted publishing (OIDC) when a GitHub Release is published. Trusted
+publishing requires the PyPI project to be pre-registered with this repo as
+its trusted publisher from the PyPI account holder's own login
+(`https://pypi.org/manage/account/publishing/`) — an account action nothing
+here can perform on someone else's behalf. The workflow also checks the
+built version against the release tag so a mismatched bump fails loudly
+instead of publishing the wrong version.
+
+### Community files describe the project as it is, not as it might become
+
+CONTRIBUTING.md, SECURITY.md and the issue templates all point back at
+`docs/DESIGN.md` and the actual test layout rather than restating generic
+boilerplate, so a contributor's first PR lands in the right shape (a rule
+gets a positive and negative test; a collector satisfies the `Collector`
+protocol structurally, no base class). The security policy states the
+read-only guarantees as things a report should hold the project to, which
+only works because Phase 2 through 5 actually built it that way.
