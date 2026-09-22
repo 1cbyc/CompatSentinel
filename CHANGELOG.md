@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `MODULE_ADDED` diff findings for DLLs first observed after an update.
+
 ## [0.1.0] - 2026-09-19
 
 Initial release.
